@@ -2,6 +2,7 @@ packages:
   device_base: "github://RobinLinde/esphome-config/device_base_mqtt.yaml@main"
   default_sensors: "github://RobinLinde/esphome-config/common/sensor/default.yaml@main"
   default_text_sensors: "github://RobinLinde/esphome-config/common/text_sensor/default.yaml@main"
+  default_button: "github://RobinLinde/esphome-config/common/button/default.yaml@main"
 
 esphome:
   name: ${devicename}

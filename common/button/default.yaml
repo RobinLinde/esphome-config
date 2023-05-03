@@ -1,0 +1,5 @@
+packages:
+  factory_reset: github://RobinLinde/esphome-config/common/button/factory_reset.yaml@main
+  restart: github://RobinLinde/esphome-config/common/button/restart.yaml@main
+  shutdown: github://RobinLinde/esphome-config/common/button/shutdown.yaml@main
+  
