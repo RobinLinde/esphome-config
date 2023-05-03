@@ -32,13 +32,12 @@ light:
             int offset = 0;
             static Color clock_ring_colors [${num_leds}];
 
-            if (initialized == false) {
-            std::fill_n(clock_ring_colors, it.size(), Color::BLACK);
-            initialized = true;
+            if (initial_run) {
+              std::fill_n(clock_ring_colors, it.size(), Color::BLACK);
             }
 
             if (!time.is_valid()) {
-            return;
+              return;
             }
 
             // calculate led indices
