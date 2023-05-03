@@ -1,0 +1,3 @@
+packages:
+    wifi_signal: github://RobinLinde/esphome-config/common/sensor/wifi.yaml@main
+    uptime: github://RobinLinde/esphome-config/common/sensor/uptime.yaml@main

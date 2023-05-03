@@ -1,0 +1,2 @@
+packages:
+  version: github://RobinLinde/esphome-config/common/text_sensor/version.yaml@main

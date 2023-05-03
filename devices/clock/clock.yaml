@@ -1,0 +1,327 @@
+packages:
+  device_base: "github://RobinLinde/esphome-config/device_base_mqtt.yaml@main"
+  default_sensors: "github://RobinLinde/esphome-config/common/sensor/default.yaml@main"
+  default_text_sensors: "github://RobinLinde/esphome-config/common/text_sensor/default.yaml@main"
+
+esphome:
+  name: ${devicename}
+  includes:
+    - "clock.h"
+    - "mapcomplete.h"
+  on_boot:
+    priority: 500.0
+    then:
+      - light.turn_on:
+          id: light_ring
+          brightness: 100%
+          effect: Sync
+
+esp32:
+  board: esp32dev
+
+light:
+  - platform: neopixelbus
+    id: light_ring
+    name: "${friendly_name} Ring"
+    variant: ws2813
+    num_leds: ${num_leds}
+    pin: GPIO2
+    effects:
+      - addressable_lambda:
+          name: "Clock"
+          update_interval: 32ms
+          lambda: |-
+            auto time = id(sntp_time).now();
+            int offset = 0;
+            static Color clock_ring_colors [${num_leds}];
+            update_clock_hands(it, time, clock_ring_colors, offset);
+      - addressable_scan:
+          name: Sync
+          move_interval: 100ms
+          scan_width: 1
+      - addressable_rainbow:
+          name: Rainbow
+          width: 60
+      - addressable_color_wipe:
+      - pulse:
+      - lambda:
+          name: "Pulsate"
+          update_interval: 1s
+          lambda: |-
+            // Slowly vary brightness between 50% and 100%
+            static int state = 0;
+            auto call = id(light_ring).turn_on();
+
+            // Transition of 1s
+            call.set_transition_length(1000);
+            
+            if(state == 0) {
+              call.set_brightness(0.5);
+              state = 1;
+            } else {
+              call.set_brightness(1.0);
+              state = 0;
+            }
+            call.perform();
+      - addressable_lambda:
+          name: "MapComplete Changesets"
+          update_interval: 5s
+          lambda: |-
+            // Get the comma separated HEX colors from the MQTT topic
+            std::string colors = id(mc_changesets_colors).state.c_str();
+
+            // Call the function
+            showChangesets(it, colors);
+  
+  - platform: rgb
+    id: seconds_hand
+    name: "${friendly_name} Seconds Hand"
+    icon: mdi:update
+    entity_category: "config"
+    red: sh_r
+    green: sh_g
+    blue: sh_b
+  
+  - platform: rgb
+    id: indicators
+    name: "${friendly_name} Indicators"
+    icon: mdi:progress-clock
+    entity_category: "config"
+    red: i_r
+    green: i_g
+    blue: i_b
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Amsterdam
+    on_time_sync:
+      if:
+        condition:
+          sensor.in_range:
+            id: uptime_sensor
+            below: 60
+        then:
+        - light.turn_on:
+            id: light_ring
+            effect: Clock
+
+sensor:
+  - platform: mqtt_subscribe
+    name: "MapComplete Changesets"
+    internal: true
+    id: mc_changesets
+    topic: "mapcomplete/statistics/changesets/total"
+    on_value:
+      if:
+        condition:
+          and:
+            - switch.is_on: mc_chime
+            - light.is_on: light_ring
+            - sensor.in_range:
+                id: uptime_sensor
+                above: 60
+            - lambda: return id(mc_changesets).state > id(mc_last_changesets);
+        then:
+          - delay: 1s
+          - script.execute: mc_chime_script
+          
+  - platform: mqtt_subscribe
+    name: "MapComplete Last Changeset ID"
+    internal: true
+    id: mc_changesets_last_id
+    topic: "mapcomplete/statistics/changesets/last"
+
+text_sensor:
+  - platform: mqtt_subscribe
+    name: "MapComplete Changeset Colors"
+    internal: true
+    id: mc_changesets_colors
+    topic: "mapcomplete/statistics/changesets/colorsStr"
+  - platform: mqtt_subscribe
+    name: "MapComplete Changeset Last Color"
+    internal: true
+    id: mc_changesets_last_color
+    topic: "mapcomplete/statistics/changesets/lastColor"
+  - platform: mqtt_subscribe
+    name: "MapComplete Changeset Last User"
+    internal: true
+    id: mc_changesets_last_user
+    topic: "mapcomplete/statistics/users/last"
+  - platform: mqtt_subscribe
+    name: "MapComplete Changeset Last Theme"
+    internal: true
+    id: mc_changesets_last_theme
+    topic: "mapcomplete/statistics/themes/last"
+
+switch:
+  - platform: template
+    name: "${friendly_name} MapComplete Chime"
+    icon: mdi:bell-ring
+    id: mc_chime
+    optimistic: True
+    entity_category: "config"
+  
+  - platform: template
+    name: "${friendly_name} Wide Hour Indicator"
+    icon: mdi:clock-outline
+    id: wide_hour_indicator
+    optimistic: True
+    entity_category: "config"
+
+button:
+  - platform: template
+    name: "${friendly_name} MapComplete Chime"
+    id: mc_chime_button
+    on_press:
+      then:
+        - script.execute: mc_chime_script
+
+output:
+  - platform: template
+    id: sh_r
+    type: float
+    write_action: 
+      then:
+        - lambda: |-
+            id(clock_seconds_color_r) = state;
+  - platform: template
+    id: sh_g
+    type: float
+    write_action: 
+      then:
+        - lambda: |-
+            id(clock_seconds_color_g) = state;
+  - platform: template
+    id: sh_b
+    type: float
+    write_action: 
+      then:
+        - lambda: |-
+            id(clock_seconds_color_b) = state;
+  - platform: template
+    id: i_r
+    type: float
+    write_action: 
+      then:
+        - lambda: |-
+            id(clock_indicators_color_r) = state;
+  - platform: template
+    id: i_g
+    type: float
+    write_action: 
+      then:
+        - lambda: |-
+            id(clock_indicators_color_g) = state;
+  - platform: template
+    id: i_b
+    type: float
+    write_action: 
+      then:
+        - lambda: |-
+            id(clock_indicators_color_b) = state;
+
+script:
+  - id: mc_chime_script
+    then:
+      - lambda: |-
+          // Save the current color of the light ring so we can restore it later
+          id(last_color_r) = id(light_ring).remote_values.get_red();
+          id(last_color_g) = id(light_ring).remote_values.get_green();
+          id(last_color_b) = id(light_ring).remote_values.get_blue();
+
+          ESP_LOGD("main", "Last color: %f, %f, %f", id(last_color_r), id(last_color_g), id(last_color_b));
+
+          // We'll also save the brightness and effect so we can restore it later
+          id(last_brightness) = id(light_ring).remote_values.get_brightness();
+          id(last_effect) = id(light_ring).get_effect_name();
+
+          ESP_LOGD("main", "Last brightness: %f", id(last_brightness));
+          ESP_LOGD("main", "Last effect: %s", id(last_effect).c_str());
+
+          // Also we need to save the new amount of changesets so we can use it for comparing
+          id(mc_last_changesets) = id(mc_changesets).state;
+      - lambda: |-
+          std::string color = id(mc_changesets_last_color).state.c_str();
+          auto call = id(light_ring).turn_on();
+
+          // Call the function
+          showSingleChangeset(call, color);
+      - delay: 4s
+      - light.turn_on:
+          id: light_ring
+          effect: MapComplete Changesets
+          brightness: 100%
+      - delay: 5s
+      - lambda: |-
+          // Restore the last color of the light ring, as well as the brightness and effect
+          auto call = id(light_ring).turn_on();
+          call.set_rgb(id(last_color_r), id(last_color_g), id(last_color_b));
+          call.set_brightness(id(last_brightness));
+          call.set_effect(id(last_effect));
+          call.perform();
+
+globals:
+  - id: clock_brightness
+    type: int
+    restore_value: yes
+    initial_value: "255"
+
+  - id: clock_indicators_enabled
+    type: bool
+    restore_value: yes
+    initial_value: "true"
+
+  - id: clock_seconds_color_r
+    type: float
+    restore_value: yes
+    initial_value: "0"
+  - id: clock_seconds_color_g
+    type: float
+    restore_value: yes
+    initial_value: "0"
+  - id: clock_seconds_color_b
+    type: float
+    restore_value: yes
+    initial_value: "1"
+
+  - id: clock_indicators_color_r
+    type: float
+    restore_value: yes
+    initial_value: "0"
+
+  - id: clock_indicators_color_g
+    type: float
+    restore_value: yes
+    initial_value: "0"
+  - id: clock_indicators_color_b
+    type: float
+    restore_value: yes
+    initial_value: "1"
+
+  - id: mc_last_changesets
+    type: int
+    restore_value: yes
+    initial_value: "0"
+
+  - id: last_color_r
+    type: float
+    restore_value: yes
+    initial_value: "0"
+  - id: last_color_g
+    type: float
+    restore_value: yes
+    initial_value: "0"
+  - id: last_color_b
+    type: float
+    restore_value: yes
+    initial_value: "0"
+
+  - id: last_brightness
+    type: float
+    restore_value: yes
+    initial_value: "0"
+
+  - id: last_effect
+    type: std::string
+    restore_value: no

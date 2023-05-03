@@ -1,0 +1,3 @@
+sensor:
+    - platform: wifi_signal
+      name: "${friendly_name} WiFi Signal"
