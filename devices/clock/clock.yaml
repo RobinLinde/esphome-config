@@ -227,9 +227,6 @@ light:
                 it[i] = Color(0, 0, 0);
                 }
             }
-
-            // Call the function
-            showChangesets(it, colors);
   
   - platform: rgb
     id: seconds_hand
