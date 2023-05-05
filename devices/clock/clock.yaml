@@ -26,208 +26,16 @@ light:
     pin: GPIO2
     effects:
       - addressable_lambda:
-          name: "Clock"
-          update_interval: 32ms
-          lambda: |-
-            auto time = id(sntp_time).now();
-            int offset = 0;
-            static Color clock_ring_colors [${num_leds}];
-
-            if (initial_run) {
-              std::fill_n(clock_ring_colors, it.size(), Color::BLACK);
-            }
-
-            if (!time.is_valid()) {
-              return;
-            }
-
-            // calculate led indices
-            int second_idx = (int)(time.second * (it.size() / 60.0));
-            int minute_idx = (int)(time.minute * (it.size() / 60.0));
-            // this idx would "jump" in big steps
-            int hour_idx = (int)((time.hour % 12) * (it.size() / 12.0));
-            // this moves one led at a time
-            int hour_inc_min_idx =
-            hour_idx + (int)(((float)time.minute / 12.0) * (it.size() / 60.0));
-
-            // the hour hand may be bigger than one led, so we use an array for that
-            std::vector<int> hour_idx_vector;
-            if (id(wide_hour_indicator).state) {
-            hour_idx_vector.push_back((hour_inc_min_idx - 1 + it.size()) % (it.size()));
-            hour_idx_vector.push_back(hour_inc_min_idx);
-            hour_idx_vector.push_back((hour_inc_min_idx + 1) % it.size());
-            } else {
-            hour_idx_vector.push_back(hour_inc_min_idx);
-            }
-
-            // fade out old colors
-            for (int i = 0; i < it.size(); i++) {
-            Color old_color = clock_ring_colors[i];
-            int percentage = 2;
-            int red = old_color.red;
-            int red_sub = std::max(1, (int)((red / 100.0) * percentage));
-            int green = old_color.green;
-            int green_sub = std::max(1, (int)((green / 100.0) * percentage));
-            int blue = old_color.blue;
-            int blue_sub = std::max(1, (int)((blue / 100.0) * percentage));
-            if (red <= red_sub) {
-            red = 0;
-            } else {
-            red -= red_sub;
-            }
-            if (green <= green_sub) {
-            green = 0;
-            } else {
-            green -= green_sub;
-            }
-            if (blue <= blue_sub) {
-            blue = 0;
-            } else {
-            blue -= blue_sub;
-            }
-            Color new_color = Color(red, green, blue, 0);
-            clock_ring_colors[i] = new_color;
-            }
-
-            int indicator_brightness = id(clock_brightness) / 3;
-            Color indicator_color =
-            Color(id(clock_indicators_color_r) * indicator_brightness,
-            id(clock_indicators_color_g) * indicator_brightness,
-            id(clock_indicators_color_b) * indicator_brightness);
-
-            // Colors for hands
-            Color hour_color = Color(id(clock_brightness), 0, 0);
-            Color minute_color = Color(0, id(clock_brightness), 0);
-            Color second_color = Color(id(clock_seconds_color_r) * id(clock_brightness),
-                id(clock_seconds_color_g) * id(clock_brightness),
-                id(clock_seconds_color_b) * id(clock_brightness));
-
-            // Disable seconds if disabled
-            if (!id(seconds_hand).remote_values.is_on()) {
-            second_color = Color::BLACK;
-            }
-
-            // merge colors if they overlap
-            // if minute idx inside hour idx range
-            if (std::find(std::begin(hour_idx_vector), std::end(hour_idx_vector),
-            minute_idx) != std::end(hour_idx_vector)) {
-            minute_color += hour_color;
-            }
-
-            if (second_idx == minute_idx) {
-            minute_color += second_color;
-            second_color = minute_color;
-            } else if (std::find(std::begin(hour_idx_vector), std::end(hour_idx_vector),
-            second_idx) != std::end(hour_idx_vector)) {
-            second_color += hour_color;
-            }
-
-            // === set colors from bottom to top
-            // indicators
-            if (id(clock_indicators_enabled)) {
-            for (int i = 0; i < it.size(); i += (int)((float)it.size() / 12)) {
-            clock_ring_colors[i] = indicator_color;
-            }
-            }
-
-            // hours
-            for (int i = 0; i < hour_idx_vector.size(); i++) {
-            clock_ring_colors[hour_idx_vector[i]] = hour_color;
-            }
-            // minutes
-            clock_ring_colors[minute_idx] = minute_color;
-            // seconds
-            if (id(seconds_hand).remote_values.is_on()) {
-            clock_ring_colors[second_idx] = second_color;
-            }
-
-            // apply colors to light
-            for (int i = 0; i < it.size(); i++) {
-            int x = (i + offset) % it.size();
-            it[x] = clock_ring_colors[i];
-            }
+          !include ../../common/light_effect/clock.yaml
       - addressable_scan:
           name: Sync
           move_interval: 100ms
           scan_width: 1
-      - addressable_rainbow:
+      - addressable_rainbow: 
           name: Rainbow
           width: 60
       - addressable_color_wipe:
-      - pulse:
-      - lambda:
-          name: "Pulsate"
-          update_interval: 1s
-          lambda: |-
-            // Slowly vary brightness between 50% and 100%
-            static int state = 0;
-            auto call = id(light_ring).turn_on();
 
-            // Transition of 1s
-            call.set_transition_length(1000);
-            
-            if(state == 0) {
-              call.set_brightness(0.5);
-              state = 1;
-            } else {
-              call.set_brightness(1.0);
-              state = 0;
-            }
-            call.perform();
-      - addressable_lambda:
-          name: "MapComplete Changesets"
-          update_interval: 5s
-          lambda: |-
-            // Get the comma separated HEX colors from the MQTT topic
-            std::string colors = id(mc_changesets_colors).state.c_str();
-
-            // Split the colors into an array without using the ESPHome split function or a stringstream
-            std::vector<std::string> color_array;
-            std::string color;
-
-            // First we remove the leading and trailing brackets
-            colors = colors.substr(1, colors.length() - 2);
-
-            for (int i = 0; i < colors.length(); i++) {
-                ESP_LOGD("main", "Processing char %c", colors[i]);
-                if (colors[i] == ',' || i == colors.length() - 1) {
-                color_array.push_back(color);
-                color = "";
-                } else {
-                color += colors[i];
-                }
-            }
-
-            ESP_LOGD("main", "Found %d colors", color_array.size());
-
-            // If we have more colors than LEDs, we only show the last n colors
-            if (color_array.size() > it.size()) {
-                ESP_LOGD("main", "More colors than LEDs, only showing last %d colors", it.size());
-                color_array.erase(color_array.begin(), color_array.begin() + color_array.size() - it.size());
-            }
-
-            // Set the colors
-            for (int i = 0; i < it.size(); i++) {
-                ESP_LOGD("main", "Processing LED %d", i);
-                // Check if we have a color for this LED
-                if (i < color_array.size()) {
-                ESP_LOGD("main", "Setting color %s", color_array[i].c_str());
-                // Now we need to remove the # from the color
-                std::string color = color_array[i].substr(1);
-
-                // Then we can convert the color from HEX to RGB
-                int r, g, b;
-                sscanf(color.c_str(), "%02x%02x%02x", &r, &g, &b);
-                
-                // And finally set the color
-                it[i] = Color(r, g, b);
-                
-                } else {
-                ESP_LOGD("main", "No color found, setting black");
-                it[i] = Color(0, 0, 0);
-                }
-            }
-  
   - platform: rgb
     id: seconds_hand
     name: "${friendly_name} Seconds Hand"
@@ -236,6 +44,7 @@ light:
     red: sh_r
     green: sh_g
     blue: sh_b
+    restore_mode: RESTORE_AND_ON
   
   - platform: rgb
     id: indicators
@@ -245,6 +54,7 @@ light:
     red: i_r
     green: i_g
     blue: i_b
+    restore_mode: RESTORE_AND_ON
 
 time:
   - platform: sntp
@@ -261,76 +71,14 @@ time:
             id: light_ring
             effect: Clock
 
-sensor:
-  - platform: mqtt_subscribe
-    name: "MapComplete Changesets"
-    internal: true
-    id: mc_changesets
-    topic: "mapcomplete/statistics/changesets/total"
-    on_value:
-      if:
-        condition:
-          and:
-            - switch.is_on: mc_chime
-            - light.is_on: light_ring
-            - sensor.in_range:
-                id: uptime_sensor
-                above: 60
-            - lambda: return id(mc_changesets).state > id(mc_last_changesets);
-        then:
-          - delay: 1s
-          - script.execute: mc_chime_script
-          
-  - platform: mqtt_subscribe
-    name: "MapComplete Last Changeset ID"
-    internal: true
-    id: mc_changesets_last_id
-    topic: "mapcomplete/statistics/changesets/last"
-
-text_sensor:
-  - platform: mqtt_subscribe
-    name: "MapComplete Changeset Colors"
-    internal: true
-    id: mc_changesets_colors
-    topic: "mapcomplete/statistics/changesets/colorsStr"
-  - platform: mqtt_subscribe
-    name: "MapComplete Changeset Last Color"
-    internal: true
-    id: mc_changesets_last_color
-    topic: "mapcomplete/statistics/changesets/lastColor"
-  - platform: mqtt_subscribe
-    name: "MapComplete Changeset Last User"
-    internal: true
-    id: mc_changesets_last_user
-    topic: "mapcomplete/statistics/users/last"
-  - platform: mqtt_subscribe
-    name: "MapComplete Changeset Last Theme"
-    internal: true
-    id: mc_changesets_last_theme
-    topic: "mapcomplete/statistics/themes/last"
-
 switch:
-  - platform: template
-    name: "${friendly_name} MapComplete Chime"
-    icon: mdi:bell-ring
-    id: mc_chime
-    optimistic: True
-    entity_category: "config"
-  
   - platform: template
     name: "${friendly_name} Wide Hour Indicator"
     icon: mdi:clock-outline
     id: wide_hour_indicator
     optimistic: True
     entity_category: "config"
-
-button:
-  - platform: template
-    name: "${friendly_name} MapComplete Chime"
-    id: mc_chime_button
-    on_press:
-      then:
-        - script.execute: mc_chime_script
+    restore_mode: RESTORE_DEFAULT_OFF
 
 output:
   - platform: template
@@ -376,71 +124,11 @@ output:
         - lambda: |-
             id(clock_indicators_color_b) = state;
 
-script:
-  - id: mc_chime_script
-    then:
-      - lambda: |-
-          // Save the current color of the light ring so we can restore it later
-          id(last_color_r) = id(light_ring).remote_values.get_red();
-          id(last_color_g) = id(light_ring).remote_values.get_green();
-          id(last_color_b) = id(light_ring).remote_values.get_blue();
-
-          ESP_LOGD("main", "Last color: %f, %f, %f", id(last_color_r), id(last_color_g), id(last_color_b));
-
-          // We'll also save the brightness and effect so we can restore it later
-          id(last_brightness) = id(light_ring).remote_values.get_brightness();
-          id(last_effect) = id(light_ring).get_effect_name();
-
-          ESP_LOGD("main", "Last brightness: %f", id(last_brightness));
-          ESP_LOGD("main", "Last effect: %s", id(last_effect).c_str());
-
-          // Also we need to save the new amount of changesets so we can use it for comparing
-          id(mc_last_changesets) = id(mc_changesets).state;
-      - lambda: |-
-          std::string color = id(mc_changesets_last_color).state.c_str();
-          auto call = id(light_ring).turn_on();
-
-          // Then we can convert the color from HEX to RGB, making sure to remove the # from the color, as well as the surrounding quotes
-          color = color.substr(2, color.length() - 3);
-          ESP_LOGD("main", "Color: %s", color.c_str());
-
-          int r, g, b;
-          sscanf(color.c_str(), "%02x%02x%02x", &r, &g, &b);
-
-          ESP_LOGD("main", "Color: %d, %d, %d", r, g, b);
-
-          // Then we need to convert them to a float between 0 and 1
-          float rf = r / 255.0;
-          float gf = g / 255.0;
-          float bf = b / 255.0;
-
-          call.set_effect("Pulsate");
-          call.set_rgb(rf, gf, bf);
-          call.perform();
-      - delay: 4s
-      - light.turn_on:
-          id: light_ring
-          effect: MapComplete Changesets
-          brightness: 100%
-      - delay: 5s
-      - lambda: |-
-          // Restore the last color of the light ring, as well as the brightness and effect
-          auto call = id(light_ring).turn_on();
-          call.set_rgb(id(last_color_r), id(last_color_g), id(last_color_b));
-          call.set_brightness(id(last_brightness));
-          call.set_effect(id(last_effect));
-          call.perform();
-
 globals:
   - id: clock_brightness
     type: int
     restore_value: yes
     initial_value: "255"
-
-  - id: clock_indicators_enabled
-    type: bool
-    restore_value: yes
-    initial_value: "true"
 
   - id: clock_seconds_color_r
     type: float
@@ -473,25 +161,3 @@ globals:
     type: int
     restore_value: yes
     initial_value: "0"
-
-  - id: last_color_r
-    type: float
-    restore_value: yes
-    initial_value: "0"
-  - id: last_color_g
-    type: float
-    restore_value: yes
-    initial_value: "0"
-  - id: last_color_b
-    type: float
-    restore_value: yes
-    initial_value: "0"
-
-  - id: last_brightness
-    type: float
-    restore_value: yes
-    initial_value: "0"
-
-  - id: last_effect
-    type: std::string
-    restore_value: no

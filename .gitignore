@@ -1,2 +1,5 @@
 .esphome/
 secrets.yaml
+
+# Ignore auto-generated gitignore files
+devices/*/.gitignore

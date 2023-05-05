@@ -1,0 +1,18 @@
+name: "Pulsate"
+update_interval: 1s
+lambda: |-
+  // Slowly vary brightness between 50% and 100%
+  static int state = 0;
+  auto call = id(light_ring).turn_on();
+
+  // Transition of 1s
+  call.set_transition_length(1000);
+  
+  if(state == 0) {
+    call.set_brightness(0.5);
+    state = 1;
+  } else {
+    call.set_brightness(1.0);
+    state = 0;
+  }
+  call.perform();

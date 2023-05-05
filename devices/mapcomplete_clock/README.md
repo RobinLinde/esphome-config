@@ -1,6 +1,8 @@
-# Clock
+# MapComplete Clock
 
-ESPHome configuration file for a clock made of addressable LEDs, like the [Brightdot Clock](https://www.velleman.eu/products/view/?id=449304) sold by 
+ESPHome configuration file for a clock made of addressable LEDs, like the [Brightdot Clock](https://www.velleman.eu/products/view/?id=449304) sold by Velleman.
+In addition to functioning as a normal clock, this clock can also show changesets made with [MapComplete](https://github.com/pietervdvn/MapComplete).
+To do this, there should be a service running that publishes statistics to MQTT. More documentation on this will follow.
 
 ## Example configuration
 
@@ -18,7 +20,7 @@ substitutions:
   mqtt_password: "YOUR_MQTT_PASSWORD"
 
 packages:
-  clock: "github://RobinLinde/esphome-config/devices/clock/clock.yaml@main"
+  clock: "github://RobinLinde/esphome-config/devices/mapcomplete_clock/mapcomplete_clock.yaml@main"
 ```
 
 ## Attribution
