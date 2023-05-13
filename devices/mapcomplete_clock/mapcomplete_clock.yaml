@@ -95,9 +95,9 @@ sensor:
         then:
           - delay: 1s
           - script.execute: mc_chime_script
-      else:
-        - lambda: |-
-            id(mc_last_changesets) = state;
+        else:
+          - lambda: |-
+              id(mc_last_changesets) = state;
           
   - platform: mqtt_subscribe
     name: "MapComplete Last Changeset ID"
