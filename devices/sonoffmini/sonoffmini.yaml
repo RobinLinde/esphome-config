@@ -18,6 +18,11 @@ binary_sensor:
       then:
         - switch.toggle: relay
 
+output:
+  - platform: gpio
+    pin: GPIO12
+    id: relay_output
+
 switch:
   - platform: gpio
     name: "${friendly_name} Relay"
@@ -28,3 +33,12 @@ status_led:
   pin: 
     number: GPIO13
     inverted: True
+
+light:
+  - platform: binary
+    name: "${friendly_name} Light"
+    output: relay_output
+    id: light
+    restore_mode: RESTORE_AND_OFF
+    disabled_by_default: True
+    
