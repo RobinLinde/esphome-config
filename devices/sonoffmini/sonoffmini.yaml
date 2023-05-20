@@ -38,7 +38,6 @@ light:
   - platform: binary
     name: "${friendly_name} Light"
     output: relay_output
-    id: light
     restore_mode: RESTORE_AND_OFF
     disabled_by_default: True
     
