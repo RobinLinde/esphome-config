@@ -1,0 +1,17 @@
+packages:
+  device_base: "github://RobinLinde/esphome-config/device_base_api.yaml@main"
+  default_sensors: "github://RobinLinde/esphome-config/common/sensor/default.yaml@main"
+  default_text_sensors: "github://RobinLinde/esphome-config/common/text_sensor/default.yaml@main"
+  default_button: "github://RobinLinde/esphome-config/common/button/default.yaml@main"
+
+esp8266:
+  board: nodemcuv2
+
+uart:
+  - rx_pin: D7
+    baud_rate: 9600
+
+sensor:
+  - platform: pm1006
+    pm_2_5: 
+      name: "${friendly_name} Particulate Matter <2.5µm" 
