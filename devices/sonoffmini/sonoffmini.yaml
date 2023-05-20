@@ -24,9 +24,9 @@ output:
     id: relay_output
 
 switch:
-  - platform: gpio
+  - platform: output
     name: "${friendly_name} Relay"
-    pin: GPIO12
+    output: relay_output
     id: relay
 
 status_led:
