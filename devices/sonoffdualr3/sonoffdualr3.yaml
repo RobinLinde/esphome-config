@@ -1,0 +1,66 @@
+packages:
+  device_base: "github://RobinLinde/esphome-config/device_base_api.yaml@main"
+  default_sensors: "github://RobinLinde/esphome-config/common/sensor/default.yaml@main"
+  default_text_sensors: "github://RobinLinde/esphome-config/common/text_sensor/default.yaml@main"
+  default_button: "github://RobinLinde/esphome-config/common/button/default.yaml@main"
+
+esp32:
+  board: esp32dev
+
+switch:
+  - platform: gpio
+    pin: GPIO27
+    name: "${friendly_name} Relay 1"
+    id: relay1
+  - platform: gpio
+    pin: GPIO14
+    name: "${friendly_name} Relay 2"
+    id: relay2
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO0
+    name: "${friendly_name} Button"
+  - platform: gpio
+    pin: 
+      number: GPIO32
+      inverted: True
+    name: "${friendly_name} Input 1"
+    id: input1
+    on_press: 
+      then:
+        switch.toggle: relay1
+  - platform: gpio
+    pin: 
+      number: GPIO33
+      inverted: True
+    name: "${friendly_name} Input 2"
+    id: input2
+    on_press: 
+      then:
+        switch.toggle: relay2
+
+status_led:
+  pin:
+    number: GPIO13
+    inverted: True
+
+uart:
+  - baud_rate: 38400
+    tx_pin: GPIO25
+    rx_pin: GPIO26
+    parity: EVEN
+
+sensor:
+  - platform: cse7761
+    active_power_1: 
+      name: "${friendly_name} Active Power 1"
+    active_power_2: 
+      name: "${friendly_name} Active Power 2"
+    current_1: 
+      name: "${friendly_name} Current 1"
+    current_2: 
+      name: "${friendly_name} Current 2"
+    voltage: 
+      name: "${friendly_name} Voltage"
+    update_interval: 5s
