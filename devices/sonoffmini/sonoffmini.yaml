@@ -9,11 +9,19 @@ esp8266:
 
 binary_sensor:
   - platform: gpio
-    pin: 
+    pin:
       number: GPIO0
       mode: INPUT_PULLUP
       inverted: True
     name: "${friendly_name} Button"
+    on_press:
+      then:
+        - switch.toggle: relay
+  - platform: gpio
+    pin:
+      number: GPIO4
+      inverted: True
+    name: "${friendly_name} Switch"
     on_press:
       then:
         - switch.toggle: relay
@@ -30,14 +38,6 @@ switch:
     id: relay
 
 status_led:
-  pin: 
+  pin:
     number: GPIO13
     inverted: True
-
-light:
-  - platform: binary
-    name: "${friendly_name} Light"
-    output: relay_output
-    restore_mode: RESTORE_AND_OFF
-    disabled_by_default: True
-    
