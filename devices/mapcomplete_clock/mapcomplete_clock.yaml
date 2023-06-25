@@ -19,7 +19,7 @@ esp32:
 
 mqtt:
   broker: ${mqtt_broker}
-  username: ${mqtt_username}
+  username: ${mqtt_user}
   password: ${mqtt_password}
   discovery: False
 
