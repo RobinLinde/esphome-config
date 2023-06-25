@@ -22,6 +22,7 @@ mqtt:
   username: ${mqtt_user}
   password: ${mqtt_password}
   discovery: False
+  log_topic: null
 
 light:
   - platform: neopixelbus
