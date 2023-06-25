@@ -1,5 +1,5 @@
 packages:
-  device_base: "github://RobinLinde/esphome-config/device_base_mqtt.yaml@main"
+  device_base: "github://RobinLinde/esphome-config/device_base_api.yaml@main"
   default_sensors: "github://RobinLinde/esphome-config/common/sensor/default.yaml@main"
   default_text_sensors: "github://RobinLinde/esphome-config/common/text_sensor/default.yaml@main"
   default_button: "github://RobinLinde/esphome-config/common/button/default.yaml@main"
@@ -17,6 +17,12 @@ esphome:
 esp32:
   board: esp32dev
 
+mqtt:
+  broker: ${mqtt_broker}
+  username: ${mqtt_username}
+  password: ${mqtt_password}
+  discovery: False
+
 light:
   - platform: neopixelbus
     id: light_ring
@@ -25,8 +31,7 @@ light:
     num_leds: ${num_leds}
     pin: GPIO2
     effects:
-      - addressable_lambda:
-          !include ../../common/light_effect/clock.yaml
+      - addressable_lambda: !include ../../common/light_effect/clock.yaml
       - addressable_scan:
           name: Sync
           move_interval: 100ms
@@ -35,11 +40,9 @@ light:
           name: Rainbow
           width: 60
       - addressable_color_wipe:
-      - lambda:
-          !include ../../common/light_effect/pulsate.yaml
-      - addressable_lambda:
-          !include ../../common/light_effect/mapcomplete.yaml
-  
+      - lambda: !include ../../common/light_effect/pulsate.yaml
+      - addressable_lambda: !include ../../common/light_effect/mapcomplete.yaml
+
   - platform: rgb
     id: seconds_hand
     name: "${friendly_name} Seconds Hand"
@@ -49,7 +52,7 @@ light:
     green: sh_g
     blue: sh_b
     restore_mode: RESTORE_AND_ON
-  
+
   - platform: rgb
     id: indicators
     name: "${friendly_name} Indicators"
@@ -71,9 +74,9 @@ time:
             id: uptime_sensor
             below: 60
         then:
-        - light.turn_on:
-            id: light_ring
-            effect: Clock
+          - light.turn_on:
+              id: light_ring
+              effect: Clock
 
 sensor:
   - platform: mqtt_subscribe
@@ -98,7 +101,7 @@ sensor:
         else:
           - lambda: |-
               id(mc_last_changesets) = id(mc_changesets).state;
-          
+
   - platform: mqtt_subscribe
     name: "MapComplete Last Changeset ID"
     internal: true
@@ -125,7 +128,7 @@ switch:
     optimistic: True
     entity_category: "config"
     restore_mode: RESTORE_DEFAULT_ON
-  
+
   - platform: template
     name: "${friendly_name} Wide Hour Indicator"
     icon: mdi:clock-outline
@@ -146,42 +149,42 @@ output:
   - platform: template
     id: sh_r
     type: float
-    write_action: 
+    write_action:
       then:
         - lambda: |-
             id(clock_seconds_color_r) = state;
   - platform: template
     id: sh_g
     type: float
-    write_action: 
+    write_action:
       then:
         - lambda: |-
             id(clock_seconds_color_g) = state;
   - platform: template
     id: sh_b
     type: float
-    write_action: 
+    write_action:
       then:
         - lambda: |-
             id(clock_seconds_color_b) = state;
   - platform: template
     id: i_r
     type: float
-    write_action: 
+    write_action:
       then:
         - lambda: |-
             id(clock_indicators_color_r) = state;
   - platform: template
     id: i_g
     type: float
-    write_action: 
+    write_action:
       then:
         - lambda: |-
             id(clock_indicators_color_g) = state;
   - platform: template
     id: i_b
     type: float
-    write_action: 
+    write_action:
       then:
         - lambda: |-
             id(clock_indicators_color_b) = state;
@@ -194,57 +197,57 @@ script:
           condition:
             - lambda: return id(mc_changesets).state > 0;
           then:
-          - lambda: |-
-              // Save the current color of the light ring so we can restore it later
-              id(last_color_r) = id(light_ring).remote_values.get_red();
-              id(last_color_g) = id(light_ring).remote_values.get_green();
-              id(last_color_b) = id(light_ring).remote_values.get_blue();
+            - lambda: |-
+                // Save the current color of the light ring so we can restore it later
+                id(last_color_r) = id(light_ring).remote_values.get_red();
+                id(last_color_g) = id(light_ring).remote_values.get_green();
+                id(last_color_b) = id(light_ring).remote_values.get_blue();
 
-              ESP_LOGD("main", "Last color: %f, %f, %f", id(last_color_r), id(last_color_g), id(last_color_b));
+                ESP_LOGD("main", "Last color: %f, %f, %f", id(last_color_r), id(last_color_g), id(last_color_b));
 
-              // We'll also save the brightness and effect so we can restore it later
-              id(last_brightness) = id(light_ring).remote_values.get_brightness();
-              id(last_effect) = id(light_ring).get_effect_name();
+                // We'll also save the brightness and effect so we can restore it later
+                id(last_brightness) = id(light_ring).remote_values.get_brightness();
+                id(last_effect) = id(light_ring).get_effect_name();
 
-              ESP_LOGD("main", "Last brightness: %f", id(last_brightness));
-              ESP_LOGD("main", "Last effect: %s", id(last_effect).c_str());
+                ESP_LOGD("main", "Last brightness: %f", id(last_brightness));
+                ESP_LOGD("main", "Last effect: %s", id(last_effect).c_str());
 
-              // Also we need to save the new amount of changesets so we can use it for comparing
-              id(mc_last_changesets) = id(mc_changesets).state;
-          - lambda: |-
-              std::string color = id(mc_changesets_last_color).state.c_str();
-              auto call = id(light_ring).turn_on();
+                // Also we need to save the new amount of changesets so we can use it for comparing
+                id(mc_last_changesets) = id(mc_changesets).state;
+            - lambda: |-
+                std::string color = id(mc_changesets_last_color).state.c_str();
+                auto call = id(light_ring).turn_on();
 
-              // Then we can convert the color from HEX to RGB, making sure to remove the # from the color, as well as the surrounding quotes
-              color = color.substr(2, color.length() - 3);
-              ESP_LOGD("main", "Color: %s", color.c_str());
+                // Then we can convert the color from HEX to RGB, making sure to remove the # from the color, as well as the surrounding quotes
+                color = color.substr(2, color.length() - 3);
+                ESP_LOGD("main", "Color: %s", color.c_str());
 
-              int r, g, b;
-              sscanf(color.c_str(), "%02x%02x%02x", &r, &g, &b);
+                int r, g, b;
+                sscanf(color.c_str(), "%02x%02x%02x", &r, &g, &b);
 
-              ESP_LOGD("main", "Color: %d, %d, %d", r, g, b);
+                ESP_LOGD("main", "Color: %d, %d, %d", r, g, b);
 
-              // Then we need to convert them to a float between 0 and 1
-              float rf = r / 255.0;
-              float gf = g / 255.0;
-              float bf = b / 255.0;
+                // Then we need to convert them to a float between 0 and 1
+                float rf = r / 255.0;
+                float gf = g / 255.0;
+                float bf = b / 255.0;
 
-              call.set_effect("Pulsate");
-              call.set_rgb(rf, gf, bf);
-              call.perform();
-          - delay: 4s
-          - light.turn_on:
-              id: light_ring
-              effect: MapComplete Changesets
-              brightness: 100%
-          - delay: 5s
-          - lambda: |-
-              // Restore the last color of the light ring, as well as the brightness and effect
-              auto call = id(light_ring).turn_on();
-              call.set_rgb(id(last_color_r), id(last_color_g), id(last_color_b));
-              call.set_brightness(id(last_brightness));
-              call.set_effect(id(last_effect));
-              call.perform();
+                call.set_effect("Pulsate");
+                call.set_rgb(rf, gf, bf);
+                call.perform();
+            - delay: 4s
+            - light.turn_on:
+                id: light_ring
+                effect: MapComplete Changesets
+                brightness: 100%
+            - delay: 5s
+            - lambda: |-
+                // Restore the last color of the light ring, as well as the brightness and effect
+                auto call = id(light_ring).turn_on();
+                call.set_rgb(id(last_color_r), id(last_color_g), id(last_color_b));
+                call.set_brightness(id(last_brightness));
+                call.set_effect(id(last_effect));
+                call.perform();
 
 globals:
   - id: clock_brightness
