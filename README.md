@@ -11,3 +11,4 @@ This repository contains some of my [ESPHome](https://esphome.io/) configuration
 | Vindriktning      | IKEA Vindriktning with ESP8266                                | [devices/vindriktning](devices/vindriktning/README.md)           |
 | Clock             | Neopixel ring with ESP32                                      | [devices/clock](devices/clock/README.md)                         |
 | MapComplete Clock | Neopixel ring with ESP32, also showing MapComplete changesets | [devices/mapcomplete_clock](devices/mapcomplete_clock/README.md) |
+| LSC Smart Plug    | LSC Smart Connect Smart Power Plug                            | [devices/lscsmartplug](devices/lscsmartplug/README.md)           |
