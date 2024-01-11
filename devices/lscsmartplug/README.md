@@ -27,6 +27,7 @@ substitutions:
   wifi_ssid: "YOUR_WIFI_SSID"
   wifi_password: "YOUR_WIFI_PASSWORD"
   fallback_password: "YOUR_FALLBACK_PASSWORD"
+  api_key: "YOUR_API_KEY"
 
 packages:
   smart_plug: "github://RobinLinde/esphome-config/devices/lscsmartplug/lscsmartplug.yaml@main"
