@@ -1,0 +1,40 @@
+packages:
+  device_base: "github://RobinLinde/esphome-config/device_base_api.yaml@main"
+  default_sensors: "github://RobinLinde/esphome-config/common/sensor/default.yaml@main"
+  default_text_sensors: "github://RobinLinde/esphome-config/common/text_sensor/default.yaml@main"
+  default_button: "github://RobinLinde/esphome-config/common/button/default.yaml@main"
+
+bk72xx:
+  board: cb2s
+
+logger:
+  hardware_uart: UART2
+
+output:
+  - platform: libretiny_pwm
+    id: output_cold_white
+    pin: P24
+  - platform: libretiny_pwm
+    id: output_warm_white
+    pin: P26
+  - platform: libretiny_pwm
+    id: output_red
+    pin: P6
+  - platform: libretiny_pwm
+    id: output_green
+    pin: P7
+  - platform: libretiny_pwm
+    id: output_blue
+    pin: P8
+
+light:
+  - platform: rgbww
+    red: output_red
+    green: output_green
+    blue: output_blue
+    cold_white: output_cold_white
+    warm_white: output_warm_white
+    cold_white_color_temperature: 6500 K
+    warm_white_color_temperature: 2700 K
+    color_interlock: True
+    name: "${friendly_name} Light"
