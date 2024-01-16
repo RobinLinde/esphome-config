@@ -33,9 +33,25 @@ packages:
 
 ## Opening the device, and connecting the wires
 
-1. Remove the plastic cover from the ceiling lamp, by twisting it counter-clockwise.
-2. Take out the 9 screws that hold the PCB and the plastic cover to the metal frame.
-3. Desolder the 3 and 4 pin connectors from the sides of the semi-circular controller PCB, to do this you can use a soldering iron and a desoldering pump.
-4. Desolder the CB2S chip from the controller PCB, to do this you can use a soldering iron and desoldering wick.
-5. Solder the wires from the PCB to connect to the USB to serial adapter, pins are shown in the silkscreen on the PCB.
-6. Connect the USB to serial adapter to your computer, and flash the ESPHome firmware.
+After opening the plastic cover, by twisting it counter-clockwise, you need to unscrew all 9 screws,
+seen here in red, that hold the PCB and the plastic cover to the metal frame.
+
+![Lamp opened, screws marked](./img/screws.png)
+
+After doing that, you should be able to remove the PCB from the lamp.
+To gain access to the pins of the CB2S chip, you can either cut away to the protective plastic on the bottom, which is not recommended,
+or desolder the circular PCB to remove it intact.
+
+To remove the PCB intact, you need to desolder the 3 and 4 pin connectors from the sides of the semi-circular controller PCB, shown here in red. This can be done with a soldering iron and a desoldering pump. It might be neccesary to heat up the pins after desoldering, to remove the connectors.
+
+![Lamp opened, connectors marked](./img/pins.png)
+
+After desoldering, you should now have access to the CB2S chip, which is shown here in red.
+
+![Bottom of PCB, CB2S chip marked](./img/bottom-pcb.png)
+
+To flash the ESPHome firmware, you need to solder the wires from the PCB to connect to the USB to serial adapter, the pins are shown in the silkscreen on the PCB.
+
+![CB2S chip, wires connected](./img/cb2s.JPG)
+
+After connecting the wires, you can connect the USB to serial adapter to your computer, and flash the ESPHome firmware.
