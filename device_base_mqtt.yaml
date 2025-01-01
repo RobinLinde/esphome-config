@@ -1,24 +1,25 @@
 esphome:
-    name: $devicename
+  name: $devicename
 
 logger:
 
 ota:
+  - platform: esphome
     password: $ota_password
 
 wifi:
-    ssid: $wifi_ssid
-    password: $wifi_password
-    fast_connect: true
+  ssid: $wifi_ssid
+  password: $wifi_password
+  fast_connect: true
 
-    ap:
-        ssid: "$friendly_name Fallback"
-        password: $fallback_password
+  ap:
+    ssid: "$friendly_name Fallback"
+    password: $fallback_password
 
 captive_portal:
 
 mqtt:
-    broker: $mqtt_broker
-    username: $mqtt_user
-    password: $mqtt_password
-    id: mqtt_client
+  broker: $mqtt_broker
+  username: $mqtt_user
+  password: $mqtt_password
+  id: mqtt_client

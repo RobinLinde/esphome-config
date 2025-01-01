@@ -4,7 +4,8 @@ esphome:
 logger:
 
 ota:
-  password: $ota_password
+  - platform: esphome
+    password: $ota_password
 
 wifi:
   ssid: $wifi_ssid
@@ -12,11 +13,11 @@ wifi:
   fast_connect: true
 
   ap:
-      ssid: "$friendly_name Fallback"
-      password: $fallback_password
+    ssid: "$friendly_name Fallback"
+    password: $fallback_password
 
 captive_portal:
 
 api:
-  encryption: 
+  encryption:
     key: $api_key
