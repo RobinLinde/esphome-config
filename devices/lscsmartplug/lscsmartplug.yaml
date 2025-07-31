@@ -4,6 +4,10 @@ packages:
   default_text_sensors: "github://RobinLinde/esphome-config/common/text_sensor/default.yaml@main"
   default_button: "github://RobinLinde/esphome-config/common/button/default.yaml@main"
 
+substitutions:
+  friendly_name: "LSC Smart Plug"
+  restore_mode: ALWAYS_OFF
+
 external_components:
   - source:
       type: git
@@ -23,7 +27,7 @@ switch:
     name: "${friendly_name} Relay"
     device_class: outlet
     id: relay
-    restore_mode: ALWAYS_OFF
+    restore_mode: ${restore_mode}
     on_turn_on:
       - if:
           condition:

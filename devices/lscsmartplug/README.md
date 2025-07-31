@@ -33,6 +33,13 @@ packages:
   smart_plug: "github://RobinLinde/esphome-config/devices/lscsmartplug/lscsmartplug.yaml@main"
 ```
 
+Optionally, it's possible to override the restore mode by adding the following substitution:
+
+```yaml
+substitutions:
+  restore_mode: "ALWAYS_ON"  # or any other restore mode
+```
+
 ## Opening the device, and connecting the wires
 
 See the [lsc-smart-connect-esphome](https://github.com/wjtje/lsc-smart-connect-esphome/blob/main/power-plug/README.md) repository by wjtje for instructions on how to open the device, and connect the wires.
