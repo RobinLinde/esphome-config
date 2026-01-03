@@ -1,3 +1,6 @@
+substitutions:
+  restore_mode: ALWAYS_OFF
+
 packages:
   device_base: "github://RobinLinde/esphome-config/device_base_api.yaml@main"
   default_sensors: "github://RobinLinde/esphome-config/common/sensor/default.yaml@main"
@@ -23,7 +26,7 @@ switch:
     name: "${friendly_name} Relay"
     device_class: outlet
     id: relay
-    restore_mode: ALWAYS_OFF
+    restore_mode: ${restore_mode}
     on_turn_on:
       - if:
           condition:
