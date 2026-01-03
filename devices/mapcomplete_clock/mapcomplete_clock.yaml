@@ -16,6 +16,8 @@ esphome:
 
 esp32:
   board: esp32dev
+  framework:
+    type: esp-idf
 
 mqtt:
   broker: ${mqtt_broker}
@@ -25,12 +27,13 @@ mqtt:
   log_topic: null
 
 light:
-  - platform: neopixelbus
+  - platform: esp32_rmt_led_strip
     id: light_ring
     name: "${friendly_name} Ring"
-    variant: ws2813
+    chipset: ws2812
     num_leds: ${num_leds}
     pin: GPIO2
+    rgb_order: GRB
     effects:
       - addressable_lambda: !include ../../common/light_effect/clock.yaml
       - addressable_scan:
